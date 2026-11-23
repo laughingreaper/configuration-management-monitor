@@ -63,6 +63,34 @@ resource "docker_container" "pihole-server" {
   }
 }
 
+# prometheus container
+resource "docker_image" "prometheus" {
+  name         = "prom/prometheus:latest"
+  keep_locally = false
+}
+
+resource "docker_container" "prometheus_server" {
+  image = docker_image.prometheus.image_id
+  name  = "prometheus"
+
+  # enable lifecycle API for ansible
+  command = [
+    "--config.file=/etc/prometheus/prometheus.yml",
+    "--storage.tsdb.path=/prometheus",
+    "--web.enable-lifecycle"
+  ]
+
+  ports {
+    internal = 9090
+    external = var.prometheus_ext_port
+  }
+
+  networks_advanced {
+    name    = docker_network.project-net.name
+    aliases = ["prometheus"]
+  }
+}
+
 # grafana container
 resource "docker_image" "grafana" {
   name         = "grafana/grafana:latest"
