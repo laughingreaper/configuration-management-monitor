@@ -14,7 +14,9 @@ docker exec -w /ansible ansible-node ansible-playbook playbook.yml
 docker exec -w /ansible ansible-node ansible-playbook playbook.yml
 ```
 
-The first two commands install controller dependencies. Repeat them if Terraform replaces the control container. The second playbook run should report `changed=0` and `failed=0`. The defaults in `group_vars/controller.yml` match the current Terraform names and bridge DNS. Update those values if your deployment uses different names. There is one inventory target because the playbook executes from the Docker controller.
+The first two commands install controller dependencies. Repeat them if Terraform replaces the control container. The second playbook run should report `changed=0` and `failed=0`. The defaults in `group_vars/controller.yml` match the current Terraform names and bridge DNS. Update those values if your deployment uses different names.
+
+The monitoring playbook targets `controller` and uses a local connection. Plays that target containers directly can use `managed-nodes`, which connects through the Docker connection plugin. The inventory maps the Pi-hole host alias to the actual Docker container name, `pihole-confmanage`.
 
 Prometheus and Grafana provisioning files are written inside Terraform's containers. Rerun the playbook after Terraform replaces either container to restore the files.
 
