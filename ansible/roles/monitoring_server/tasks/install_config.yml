@@ -1,0 +1,38 @@
+---
+- name: Deploy {{ config_file.destination }} into {{ config_container }}
+  ansible.builtin.command:
+    argv:
+      - docker
+      - exec
+      - --interactive
+      - --user
+      - "0"
+      - "{{ config_container }}"
+      - sh
+      - -eu
+      - -c
+      - |
+        destination=$1
+        validation=$2
+        directory=$(dirname "$destination")
+        mkdir -p "$directory"
+        staged=$(mktemp "$directory/.ansible-XXXXXX")
+        trap 'rm -f "$staged"' EXIT
+        cat > "$staged"
+        if cmp -s "$staged" "$destination"; then
+          exit 0
+        fi
+        if [ -n "$validation" ]; then
+          promtool check "$validation" "$staged"
+        fi
+        chmod 0644 "$staged"
+        mv -f "$staged" "$destination"
+        echo config-installed
+      - install-config
+      - "{{ config_file.destination }}"
+      - "{{ config_file.validate | default('') }}"
+    stdin: "{{ lookup(config_file.lookup | default('ansible.builtin.template'), config_file.source) }}"
+    stdin_add_newline: false
+  register: config_install
+  changed_when: "'config-installed' in config_install.stdout_lines"
+  notify: "{{ config_handler }}"
