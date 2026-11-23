@@ -9,14 +9,16 @@ After the team has deployed the Terraform stack, run these commands on its Docke
 ```sh
 docker exec -u 0 ansible-node apk add --no-cache py3-requests
 docker exec -w /ansible ansible-node ansible-galaxy collection install -r requirements.yml
-docker exec -w /ansible ansible-node ansible-playbook --syntax-check playbook.yml
-docker exec -w /ansible ansible-node ansible-playbook playbook.yml
-docker exec -w /ansible ansible-node ansible-playbook playbook.yml
+docker exec -e ANSIBLE_CONFIG=/ansible/ansible.cfg -w /ansible ansible-node ansible-playbook --syntax-check playbook.yml
+docker exec -e ANSIBLE_CONFIG=/ansible/ansible.cfg -w /ansible ansible-node ansible-playbook playbook.yml
+docker exec -e ANSIBLE_CONFIG=/ansible/ansible.cfg -w /ansible ansible-node ansible-playbook playbook.yml
 ```
 
 The first two commands install controller dependencies. Repeat them if Terraform replaces the control container. The second playbook run should report `changed=0` and `failed=0`. The defaults in `group_vars/controller.yml` match the current Terraform names and bridge DNS. Update those values if your deployment uses different names.
 
 The monitoring playbook targets `controller` and uses a local connection. Plays that target containers directly can use `managed-nodes`, which connects through the Docker connection plugin. The inventory maps the Pi-hole host alias to the actual Docker container name, `pihole-confmanage`.
+
+The read-only host mount works without shared mount propagation. On a Linux host with a shared root mount, set `node_exporter_root_mount_options` to `ro,rslave` if exporter visibility into newly mounted host filesystems is needed.
 
 Prometheus and Grafana provisioning files are written inside Terraform's containers. Rerun the playbook after Terraform replaces either container to restore the files.
 

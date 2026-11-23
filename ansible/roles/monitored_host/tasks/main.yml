@@ -9,7 +9,7 @@
     command:
       - --path.rootfs=/host
     volumes:
-      - /:/host:ro,rslave
+      - "/:/host:{{ node_exporter_root_mount_options }}"
     network_mode: "{{ monitoring_network }}"
     networks:
       - name: "{{ monitoring_network }}"
