@@ -17,13 +17,13 @@ resource "docker_network" "project-net" {
 }
 
 # pihole container (managed and monitored node)
-resource "docker_image" "pihole" {
+resource "docker_image" "pihole-server" {
   name         = "pihole/pihole:latest"
   keep_locally = false
 }
 
 resource "docker_container" "pihole-server" {
-  image = docker_image.pihole.image_id
+  image = docker_image.pihole-server.image_id
   name  = "pihole-confmanage" # Riley already has a container called "pihole"
 
   capabilities {
