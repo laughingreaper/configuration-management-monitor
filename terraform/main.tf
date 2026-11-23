@@ -11,6 +11,11 @@ provider "docker" {
   host = "unix:///var/run/docker.sock"
 }
 
+# create project network
+resource "docker_network" "project-net" {
+  name = "project-net"
+}
+
 # pihole container (managed and monitored node)
 resource "docker_image" "pihole" {
   name         = "pihole/pihole:latest"
@@ -50,6 +55,12 @@ resource "docker_container" "pihole-server" {
     external = var.pihole_ext_port_web
     protocol = "tcp"
   }
+
+  # allow container to be reachable by hostname
+  networks_advanced {
+    name    = docker_network.lab-net.name
+    aliases = ["pihole-server"]
+  }
 }
 
 # grafana container
@@ -66,6 +77,12 @@ resource "docker_container" "grafana_server" {
     internal = 3000
     external = var.grafana_ext_port
   }
+
+  # allow container to be reachable by hostname
+  networks_advanced {
+    name    = docker_network.lab-net.name
+    aliases = ["grafana"]
+  }
 }
 
 # ansible control container
@@ -74,8 +91,29 @@ resource "docker_image" "ansible" {
   keep_locally = false
 }
 
-resource "docker_container" "ansible_runner" {
-  image   = docker_image.ansible.image_id
-  name    = "ansible_node"
-  command = ["tail", "-f", "/dev/null"]
+resource "docker_container" "ansible-node" {
+  image = docker_image.ansible.image_id
+  name  = "ansible-node"
+
+  # install docker-cli
+  entrypoint = ["/bin/sh", "-c"]
+  command    = ["apk add --no-cache docker-cli && tail -f /dev/null"]
+
+  # mount docker
+  volumes {
+    host_path      = "/var/run/docker.sock"
+    container_path = "/var/run/docker.sock"
+  }
+
+  # mount ansible files
+  volumes {
+    host_path      = abspath("${path.module}/../ansible")
+    container_path = "/ansible"
+  }
+
+  # allow container to be reachable by hostname
+  networks_advanced {
+    name    = docker_network.lab-net.name
+    aliases = ["ansible-node"]
+  }
 }

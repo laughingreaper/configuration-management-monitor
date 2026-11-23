@@ -1,0 +1,3 @@
+[managed-nodes]
+pihole ansible_host=pihole-confmanage ansible_connection=community.docker.docker
+grafana ansible_host=grafana ansible_connection=community.docker.docker
