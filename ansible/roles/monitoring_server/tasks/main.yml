@@ -1,0 +1,59 @@
+---
+- name: Install Prometheus rules and scrape configuration
+  ansible.builtin.include_tasks: install_config.yml
+  vars:
+    config_container: "{{ prometheus_container }}"
+    config_handler: Restart Prometheus
+  loop:
+    - source: node-alerts.yml.j2
+      destination: /etc/prometheus/project-node-alerts.yml
+      validate: rules
+    - source: prometheus.yml.j2
+      destination: /etc/prometheus/prometheus.yml
+      validate: config
+  loop_control:
+    loop_var: config_file
+
+- name: Install Grafana dashboard and provisioning files
+  ansible.builtin.include_tasks: install_config.yml
+  vars:
+    config_container: "{{ grafana_container }}"
+    config_handler: Restart Grafana
+  loop:
+    - source: node-dashboard.json
+      lookup: ansible.builtin.file
+      destination: /etc/grafana/project-dashboards/node-dashboard.json
+    - source: datasource.yml.j2
+      destination: /etc/grafana/provisioning/datasources/project-prometheus.yml
+    - source: dashboard-provider.yml.j2
+      destination: /etc/grafana/provisioning/dashboards/project-node.yml
+  loop_control:
+    loop_var: config_file
+
+- name: Apply changed configuration before verifying the stack
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait until Prometheus can scrape Node Exporter
+  ansible.builtin.uri:
+    url: >-
+      {{ prometheus_url }}/api/v1/query?query={{ 'up{job="node_exporter"} == 1' | urlencode }}
+    status_code: 200
+    use_proxy: false
+  register: exporter_query
+  until:
+    - exporter_query.status == 200
+    - (exporter_query.json.data.result | default([]) | length) > 0
+  retries: 20
+  delay: 3
+  when: not ansible_check_mode
+
+- name: Wait for Grafana to become healthy
+  ansible.builtin.uri:
+    url: "{{ grafana_url }}/api/health"
+    status_code: 200
+    use_proxy: false
+  register: grafana_health
+  until: grafana_health.status == 200
+  retries: 20
+  delay: 3
+  when: not ansible_check_mode

@@ -1,0 +1,15 @@
+---
+- name: Run Node Exporter on the project network
+  community.docker.docker_container:
+    name: "{{ node_exporter_container }}"
+    image: "{{ node_exporter_image }}"
+    state: started
+    restart_policy: unless-stopped
+    pid_mode: host
+    command:
+      - --path.rootfs=/host
+    volumes:
+      - /:/host:ro,rslave
+    network_mode: "{{ monitoring_network }}"
+    networks:
+      - name: "{{ monitoring_network }}"

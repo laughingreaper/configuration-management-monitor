@@ -1,0 +1,10 @@
+groups:
+  - name: project-node
+    rules:
+      - alert: TargetDown
+        expr: up{job="node_exporter"} == 0
+        for: 20s
+        labels:
+          severity: critical
+        annotations:
+          summary: Node Exporter is unreachable
