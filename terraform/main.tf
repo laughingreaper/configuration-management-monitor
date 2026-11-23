@@ -58,7 +58,7 @@ resource "docker_container" "pihole-server" {
 
   # allow container to be reachable by hostname
   networks_advanced {
-    name    = docker_network.lab-net.name
+    name    = docker_network.project-net.name
     aliases = ["pihole-server"]
   }
 }
@@ -80,7 +80,7 @@ resource "docker_container" "grafana_server" {
 
   # allow container to be reachable by hostname
   networks_advanced {
-    name    = docker_network.lab-net.name
+    name    = docker_network.project-net.name
     aliases = ["grafana"]
   }
 }
@@ -113,7 +113,7 @@ resource "docker_container" "ansible-node" {
 
   # allow container to be reachable by hostname
   networks_advanced {
-    name    = docker_network.lab-net.name
+    name    = docker_network.project-net.name
     aliases = ["ansible-node"]
   }
 }
