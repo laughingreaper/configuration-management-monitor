@@ -16,53 +16,6 @@ resource "docker_network" "project-net" {
   name = "project-net"
 }
 
-# pihole container (managed and monitored node)
-resource "docker_image" "pihole-server" {
-  name         = "pihole/pihole:latest"
-  keep_locally = false
-}
-
-resource "docker_container" "pihole-server" {
-  image = docker_image.pihole-server.image_id
-  name  = "pihole-confmanage" # Riley already has a container called "pihole"
-
-  capabilities {
-    add = ["NET_ADMIN"]
-  }
-
-  # env variable kept in terraform.tfvars
-  env = [
-    "TZ=${var.pihole_tz}",
-    "WEBPASSWORD=${var.pihole_password}"
-  ]
-
-  # external port mappings also in terraform.tfvars
-  # (because Riley already has a pihole running)
-  ports {
-    internal = 53
-    external = var.pihole_ext_port_dns
-    protocol = "tcp"
-  }
-
-  ports {
-    internal = 53
-    external = var.pihole_ext_port_dns
-    protocol = "udp"
-  }
-
-  ports {
-    internal = 80
-    external = var.pihole_ext_port_web
-    protocol = "tcp"
-  }
-
-  # allow container to be reachable by hostname
-  networks_advanced {
-    name    = docker_network.project-net.name
-    aliases = ["pihole-server"]
-  }
-}
-
 # prometheus container
 resource "docker_image" "prometheus" {
   name         = "prom/prometheus:latest"
@@ -113,6 +66,8 @@ resource "docker_container" "grafana_server" {
   }
 }
 
+# ADD NODE-EXPORTER CONTAINER HERE
+
 # ansible control container
 resource "docker_image" "ansible" {
   name         = "alpine/ansible:latest"
@@ -145,3 +100,5 @@ resource "docker_container" "ansible-node" {
     aliases = ["ansible-node"]
   }
 }
+
+# ADD MANAGED NODE(S) HERE

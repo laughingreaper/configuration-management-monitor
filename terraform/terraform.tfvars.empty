@@ -1,8 +1,4 @@
 # this is an empty version of the tfvars file
 # fill it out and remove the ".empty" extension
-pihole_tz           =
-pihole_password     =
-pihole_ext_port_dns =
-pihole_ext_port_web =
 grafana_ext_port    =
 prometheus_ext_port =
