@@ -22,9 +22,9 @@ resource "docker_image" "prometheus" {
   keep_locally = false
 }
 
-resource "docker_container" "prometheus_server" {
+resource "docker_container" "prometheus-srv" {
   image = docker_image.prometheus.image_id
-  name  = "prometheus"
+  name  = "prometheus-srv"
 
   # enable lifecycle API for ansible
   command = [
@@ -40,7 +40,7 @@ resource "docker_container" "prometheus_server" {
 
   networks_advanced {
     name    = docker_network.project-net.name
-    aliases = ["prometheus"]
+    aliases = ["prometheus-srv"]
   }
 }
 
@@ -50,9 +50,9 @@ resource "docker_image" "grafana" {
   keep_locally = false
 }
 
-resource "docker_container" "grafana_server" {
-  image = "grafana/grafana:latest"
-  name  = "grafana"
+resource "docker_container" "grafana-srv" {
+  image = docker_image.grafana.image_id
+  name  = "grafana-srv"
 
   ports {
     internal = 3000
@@ -62,11 +62,9 @@ resource "docker_container" "grafana_server" {
   # allow container to be reachable by hostname
   networks_advanced {
     name    = docker_network.project-net.name
-    aliases = ["grafana"]
+    aliases = ["grafana-srv"]
   }
 }
-
-# ADD NODE-EXPORTER CONTAINER HERE
 
 # ansible control container
 resource "docker_image" "ansible" {
@@ -74,9 +72,9 @@ resource "docker_image" "ansible" {
   keep_locally = false
 }
 
-resource "docker_container" "ansible-node" {
+resource "docker_container" "ansible-srv" {
   image = docker_image.ansible.image_id
-  name  = "ansible-node"
+  name  = "ansible-srv"
 
   # install docker-cli
   entrypoint = ["/bin/sh", "-c"]
@@ -97,8 +95,26 @@ resource "docker_container" "ansible-node" {
   # allow container to be reachable by hostname
   networks_advanced {
     name    = docker_network.project-net.name
-    aliases = ["ansible-node"]
+    aliases = ["ansible-srv"]
   }
 }
 
-# ADD MANAGED NODE(S) HERE
+# managed ubuntu node
+resource "docker_image" "ubuntu-26_04" {
+  name         = "ubuntu:26.04"
+  keep_locally = false
+}
+
+resource "docker_container" "ubuntu-mngd" {
+  image = docker_image.ubuntu-26_04.image_id
+  name  = "ubuntu-mngd"
+
+  # install python3 and common tools for ansible, then keep alive
+  entrypoint = ["/bin/sh", "-c"]
+  command    = ["apt-get update && apt-get install -y python3 sudo curl tar procps iputils-ping && tail -f /dev/null"]
+
+  networks_advanced {
+    name    = docker_network.project-net.name
+    aliases = ["node-ubuntu"]
+  }
+}
