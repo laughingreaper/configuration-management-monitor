@@ -113,8 +113,30 @@ resource "docker_container" "ubuntu-mngd" {
   entrypoint = ["/bin/sh", "-c"]
   command    = ["apt-get update && apt-get install -y python3 sudo curl tar procps iputils-ping && tail -f /dev/null"]
 
+  # allow container to be reachable by hostname
   networks_advanced {
     name    = docker_network.project-net.name
     aliases = ["node-ubuntu"]
+  }
+}
+
+# managed rocky node
+resource "docker_image" "rocky-10" {
+  name         = "rockylinux:10"
+  keep_locally = false
+}
+
+resource "docker_container" "rocky-mngd" {
+  image = docker_image.rocky-10.image_id
+  name  = "rocky-mngd"
+
+  # install python3 and common tools for ansible, then keep alive
+  entrypoint = ["/bin/sh", "-c"]
+  command    = ["dnf install -y python3 sudo curl tar procps-ng iputils && tail -f /dev/null"]
+
+  # allow container to be reachable by hostname
+  networks_advanced {
+    name    = docker_network.project-net.name
+    aliases = ["node-rocky"]
   }
 }
