@@ -4,6 +4,10 @@ ubuntu-mngd
 [rocky]
 rocky-mngd
 
+[managed]
+ubuntu-mngd
+rocky-mngd
+
 [monitoring]
 prometheus-srv
 grafana-srv
