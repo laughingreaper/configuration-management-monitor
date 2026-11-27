@@ -1,8 +1,0 @@
-apiVersion: 1
-datasources:
-  - name: Project Prometheus
-    uid: project-prometheus
-    type: prometheus
-    access: proxy
-    url: {{ prometheus_url | to_json }}
-    editable: false

@@ -1,10 +1,12 @@
-[controller]
-monitoring_control ansible_connection=local ansible_python_interpreter="{{ ansible_playbook_python }}"
+[ubuntu]
+ubuntu-mngd
 
-[managed-nodes]
-pihole-server ansible_host=pihole-confmanage
-grafana ansible_host=grafana
-prometheus ansible_host=prometheus
+[rocky]
+rocky-mngd
 
-[managed-nodes:vars]
-ansible_connection=community.docker.docker
+[monitoring]
+prometheus-srv
+grafana-srv
+
+[ansible]
+ansible-srv ansible_connection=local

@@ -78,7 +78,7 @@ resource "docker_container" "ansible-srv" {
 
   # install docker-cli
   entrypoint = ["/bin/sh", "-c"]
-  command    = ["apk add --no-cache docker-cli && tail -f /dev/null"]
+  command    = ["apk add --no-cache docker-cli && ansible-galaxy collection install community.docker && tail -f /dev/null"]
 
   # mount docker
   volumes {
