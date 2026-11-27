@@ -1,24 +1,27 @@
-# Local .terraform directories and plugins
+# local .terraform directories and plugins
 **/.terraform/*
 
-# .tfstate files (contains your infrastructure state and can contain sensitive data)
+# .tfstate files
 *.tfstate
 *.tfstate.*
 
-# Crash log files
+# crash log files
 crash.log
 crash.*.log
 
-# Exclude all .tfvars files (critical for keeping your Pi-hole password secret)
+# exclude all .tfvars files
 *.tfvars
 *.tfvars.json
 
-# Ignore override files used for local testing
+# ignore override files used for local testing
 override.tf
 override.tf.json
 *_override.tf
 *_override.tf.json
 
-# Ignore CLI configuration files
+# ignore CLI configuration files
 .terraformrc
 terraform.rc
+
+# ignore lock files
+.terraform.lock.hcl

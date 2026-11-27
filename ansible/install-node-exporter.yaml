@@ -1,0 +1,46 @@
+---
+- name: Install and run node_exporter on managed Linux containers
+  hosts: managed
+  become: false
+  vars:
+    node_exporter_version: "1.8.2"
+    node_exporter_arch: "{{ 'arm64' if ansible_architecture == 'aarch64' else 'amd64' }}"
+    node_exporter_dir: "node_exporter-{{ node_exporter_version }}.linux-{{ node_exporter_arch }}"
+    node_exporter_url: "\
+      https://github.com/prometheus/node_exporter/releases/download/\
+      v{{ node_exporter_version }}/{{ node_exporter_dir }}.tar.gz"
+
+  tasks:
+    - name: Download and extract node_exporter
+      ansible.builtin.unarchive:
+        src: "{{ node_exporter_url }}"
+        dest: /tmp
+        remote_src: true
+        creates: "/tmp/{{ node_exporter_dir }}/node_exporter"
+
+    - name: Install node_exporter binary to /usr/local/bin
+      ansible.builtin.copy:
+        src: "/tmp/{{ node_exporter_dir }}/node_exporter"
+        dest: /usr/local/bin/node_exporter
+        mode: "0755"
+        remote_src: true
+
+    - name: Check if node_exporter is already running
+      ansible.builtin.command: pgrep -x node_exporter
+      register: node_exporter_proc
+      failed_when: false
+      changed_when: false
+
+    - name: Start node_exporter in the background
+      ansible.builtin.shell: nohup /usr/local/bin/node_exporter >/var/log/node_exporter.log 2>&1 &
+      when: node_exporter_proc.rc != 0
+      changed_when: true
+
+    - name: Verify node_exporter is listening on port 9100
+      ansible.builtin.uri:
+        url: http://localhost:9100/metrics
+        status_code: 200
+      register: metrics_check
+      retries: 5
+      delay: 2
+      until: metrics_check.status == 200

@@ -1,8 +1,0 @@
----
-- name: Restart Prometheus
-  ansible.builtin.command:
-    argv: [docker, restart, "{{ prometheus_container }}"]
-
-- name: Restart Grafana
-  ansible.builtin.command:
-    argv: [docker, restart, "{{ grafana_container }}"]
